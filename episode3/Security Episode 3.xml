@@ -1,0 +1,189 @@
+<export><workspace name="Security Episode 3"><query name="Insert Docs" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  insert example docs in the Documents database.
+*/
+
+declareUpdate();
+
+if (xdmp.databaseName(xdmp.database()) == "Documents") {
+  
+  xdmp.documentInsert(
+    "/secret/11111.json",
+    {
+      "title": "secret document about Spectre",
+      "body": "we think Spectre is planning to meet in Barcelona."
+    }
+  );
+
+  xdmp.documentInsert(
+    "/top-secret/22222.json",
+    {
+      "title": "top secret document about Bond",
+      "body": "do not let 007 leave the country"
+    }
+  );
+
+  xdmp.documentInsert(
+    "/unclassified/33333.json",
+    {
+      "title": "general observations",
+      "body": "It's no secret Bond has some really nice cars and suits"
+    }
+  );
+}
+else {
+  "Please select the Documents database from the Content Source menu and run this script again." 
+}</query><query name="Setup App Server" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create an:
+    HTTP app server 
+    Pointing to the Documents database
+    On port 8010
+    With a root directory on the file system = c:\mlu-ondemand\security\episode3
+    
+  NOTE:  Adjust the root variable as needed based on the location on your file system where you placed the content for this episode.
+  NOTE:  You need to escape backslash characters in the root directory by using double backslash (\\)
+*/
+
+var root = "c:\\mlu-ondemand\\security\\episode3";
+
+var config = 
+  {
+    "server-name":"security-demo",
+    "server-type":"http",
+    "group-name":"Default", 
+    "root":root,
+    "port":8010,
+    "content-database":"Documents"
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/servers', options);
+
+</query><query name="Insert Docs - Permissions" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  insert two example docs with appropriate permissions
+*/
+
+declareUpdate();
+
+if (xdmp.databaseName(xdmp.database()) == "Documents") {
+  
+  xdmp.documentInsert(
+    "/secret/11111.json",
+    {
+      "title": "secret document about Spectre",
+      "body": "we think Spectre is planning to meet in Barcelona"
+    },
+    [xdmp.permission("secret-read", "read"), xdmp.permission("project-admin", "update")]
+  );
+
+  xdmp.documentInsert(
+    "/top-secret/22222.json",
+    {
+      "title": "top secret document about Bond",
+      "body": "do not let 007 leave the country"
+    },
+    [xdmp.permission("top-secret-read", "read"), xdmp.permission("project-admin", "update")]
+  );
+
+  xdmp.documentInsert(
+    "/unclassified/33333.json",
+    {
+      "title": "general observations",
+      "body": "It's no secret Bond has some really nice cars and suits"
+    },
+    [xdmp.permission("project-default", "read"), xdmp.permission("project-admin", "update")]
+  );
+}
+else {
+  "Please select the Documents database from the Content Source menu and run this script again." 
+}</query><query name="Add Permissions" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Update the documents in the database with appropriate permissions.
+*/
+
+declareUpdate();
+
+if (xdmp.databaseName(xdmp.database()) == "Documents") {
+  
+  xdmp.documentAddPermissions("/secret/11111.json", [xdmp.permission("secret-read", "read"), xdmp.permission("project-admin", "update")]);
+
+  xdmp.documentAddPermissions("/top-secret/22222.json", [xdmp.permission("top-secret-read", "read"), xdmp.permission("project-admin", "update")]);
+
+  xdmp.documentAddPermissions("/unclassified/33333.json", [xdmp.permission("project-default", "read"), xdmp.permission("project-admin", "update")]);
+}
+else {
+  "Please select the Documents database from the Content Source menu and run this script again." 
+}</query><query name="Load Module - app.js" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Load the SJS module from the filesystem into the Modules database.
+*/
+
+declareUpdate();
+
+var file = "c:\\mlu-ondemand\\security\\episode3\\app.sjs";
+
+if (xdmp.databaseName(xdmp.database()) == "Modules") {
+  
+  xdmp.documentLoad(
+    file,
+    {
+      "uri" : "/app.sjs"
+    }
+  )
+}
+else {
+  "Please select the Modules database from the Content Source menu and run this script again."
+}</query><query name="App Server - Modules" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Update our HTTP app server to use the Modules database and set the root directory to forward slash
+*/
+
+var root = "/";
+
+var config = 
+  {
+    "root":root,
+    "modules-database":"Modules"
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPut('http://localhost:8002/manage/v2/servers/security-demo/properties?group-id=Default', options);
+
+</query><query name="Add Execute Permissions" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Update app.sjs with proper execute permissions
+*/
+
+declareUpdate();
+
+if (xdmp.databaseName(xdmp.database()) == "Modules") {
+  
+  xdmp.documentAddPermissions(
+    "/app.sjs", 
+    [
+     xdmp.permission("project-default", "execute"),
+     xdmp.permission("secret-read", "execute"), 
+     xdmp.permission("project-admin", "execute")
+    ]
+  );
+
+}
+else
+  "Please select the Modules database from the Content Source menu and run this script again."</query></workspace></export>

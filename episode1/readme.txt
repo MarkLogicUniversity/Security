@@ -1,0 +1,1 @@
+Episode 1 does not require any additional files in order to complete the exercises.

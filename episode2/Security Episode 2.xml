@@ -1,0 +1,169 @@
+<export><workspace name="Security Episode 2"><query name="Default Role" focus="true" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the project-default role
+*/
+
+var config = 
+    {
+      "role-name":"project-default"
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/roles', options);
+
+</query><query name="Admin Role" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the project-admin role
+*/
+
+var config = 
+    {
+      "role-name":"project-admin"
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/roles', options);
+
+</query><query name="Secret Role" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the secret-read role
+*/
+
+var config = 
+    {
+      "role-name":"secret-read"
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/roles', options);
+
+</query><query name="Top Secret Role" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the top-secret-read role
+*/
+
+var config = 
+    {
+      "role-name":"top-secret-read",
+      "role": ["secret-read"]
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/roles', options);
+
+</query><query name="Default User" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the project-default-user for the app
+*/
+
+var config = 
+    {
+      "user-name":"project-default-user",
+      "password":"pass",
+      "role": [ "project-default" ]
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/users', options);
+
+</query><query name="M User" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the M user for the app
+*/
+
+var config = 
+    {
+      "user-name":"m",
+      "password":"pass",
+      "role": [ "project-admin", "top-secret-read" ]
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/users', options);
+
+</query><query name="Bond User" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create the Bond user for the app
+*/
+
+var config = 
+    {
+      "user-name":"bond",
+      "password":"pass",
+      "role": [ "secret-read" ]
+    };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/users', options);
+
+</query></workspace></export>

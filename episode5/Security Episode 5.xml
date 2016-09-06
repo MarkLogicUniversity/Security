@@ -1,0 +1,138 @@
+<export><workspace name="Security Episode 5"><query name="Load Module - URI" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Load the SJS module from the filesystem into the Modules database.
+*/
+
+declareUpdate();
+
+var file = "c:\\mlu-ondemand\\security\\episode5\\uri.sjs";
+
+if (xdmp.databaseName(xdmp.database()) == "Modules") {
+  
+  xdmp.documentLoad(
+    file,
+    {
+      "uri" : "/uri.sjs",
+      "permissions": [xdmp.permission("project-default", "execute"), xdmp.permission("secret-read", "execute"), xdmp.permission("project-admin", "execute")]
+    }
+  )
+}
+else {
+  "Please select the Modules database from the Content Source menu and run this script again."
+}</query><query name="App Server - Digest Auth" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Update our HTTP app server to the original default settings of digest authentication
+*/
+
+var root = "/";
+
+var config = 
+  { 
+    "authentication":"digest",
+    "default-user":"nobody"
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPut('http://localhost:8002/manage/v2/servers/security-demo/properties?group-id=Default', options);
+
+</query><query name="URI Privilege" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  Create a URI privilege allowing users with the secret-read role to create docs with URIs like /secret/*
+*/
+
+var root = "/";
+
+var config = 
+  { 
+    "privilege-name":"secret-read-uri",
+    "kind":"uri",
+    "action":"/secret/",
+    "role":["secret-read"]
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/privileges', options);
+
+</query><query name="Insert Message Doc" focus="false" active="true" content-source="as:5605749785420969044:" mode="javascript">/*
+  insert a new doc containing geospatial data
+*/
+
+declareUpdate();
+
+if (xdmp.databaseName(xdmp.database()) == "Documents") {
+  
+  xdmp.documentInsert(
+    "/secret/44444.json",
+    {
+      "title": "alert...intercepted message",
+      "body": "spectre meeting today at 17:00",
+      "latitude": "41.390205",
+      "longitude": "2.154007"
+    },
+    [xdmp.permission("secret-read", "read"), xdmp.permission("project-admin", "update")]
+  );
+
+}
+else {
+  "Please select the Documents database from the Content Source menu and run this script again." 
+}</query><query name="Load Module - execute.sjs" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Load the execute.sjs module from the filesystem into the Modules database.
+*/
+
+declareUpdate();
+
+var file = "c:\\mlu-ondemand\\security\\episode5\\execute.sjs";
+
+if (xdmp.databaseName(xdmp.database()) == "Modules") {
+  
+  xdmp.documentLoad(
+    file,
+    {
+      "uri" : "/execute.sjs",
+      "permissions": [xdmp.permission("secret-read", "execute"), xdmp.permission("project-admin", "execute")]
+    }
+  )
+}
+else {
+  "Please select the Modules database from the Content Source menu and run this script again."
+}</query><query name="Add Execute Privilege" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Update the "secret-read" role with an execute privilege to perform the xdmp.httpGet function 
+*/
+
+var config = 
+  { 
+    "role":["secret-read"]
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPut('http://localhost:8002/manage/v2/privileges/xdmp:http-get/properties?kind=execute', options);</query></workspace></export>

@@ -1,0 +1,27 @@
+<export><workspace name="Security Episode 4"><query name="App Server - App Level Auth" focus="false" active="true" content-source="5574623254553060188:0:Apps" mode="javascript">/*
+  Update our HTTP app server to use application-level authentication and a default user = project-default-user
+*/
+
+var root = "/";
+
+var config = 
+  { 
+    "authentication":"application-level",
+    "default-user":"project-default-user"
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPut('http://localhost:8002/manage/v2/servers/security-demo/properties?group-id=Default', options);
+
+</query></workspace></export>
