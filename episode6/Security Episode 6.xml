@@ -1,0 +1,137 @@
+<export><workspace name="Security Episode 6"><query name="Review Permissions" focus="true" active="true" content-source="as:7198746565588753447:" mode="javascript">// Just to refresh our memory about what we setup in prior episodes, let's review what permissions our "secret-read" role has on our "urgent message" document.
+
+var permissions = xdmp.documentGetPermissions("/secret/44444.json");
+permissions;
+
+var summary = [];
+
+permissions.map(function(items){
+  summary.push(
+    {
+      capability: items.capability,
+      roleName: xdmp.eval("var sec = require(\"/MarkLogic/security.xqy\");sec.getRoleNames(items.roleId)", {items: items}, {database: xdmp.database("Security")})
+    });
+});
+
+summary;</query><query name="Load Modules" focus="false" active="true" content-source="11592741468623259040:0:Apps" mode="javascript">//  Load the SJS modules from the filesystem and put them into the Modules database.
+
+declareUpdate();
+
+var file1 = "c:\\mlu-ondemand\\security\\episode6\\status-update.sjs";
+var file2 = "c:\\mlu-ondemand\\security\\episode6\\amped-functions.sjs";
+
+if (xdmp.databaseName(xdmp.database()) == "Modules") {
+  
+  xdmp.documentLoad(
+    file1,
+    {
+      "uri" : "/status-update.sjs",
+      "permissions": [xdmp.permission("secret-read", "execute"), xdmp.permission("project-admin", "execute")]
+    }
+  );
+  
+  xdmp.documentLoad(
+    file2,
+    {
+      "uri" : "/amped-functions.sjs",
+      "permissions": [xdmp.permission("secret-read", "execute"), xdmp.permission("project-admin", "execute")]
+    }
+  );  
+  
+}
+else {
+  "Please select the Modules database from the Content Source menu and run this script again."
+}</query><query name="Test Module" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">//  Lets perform an initial test of the code in Query Console as an admin to make sure it works.
+
+var ampedFunctions = require("/amped-functions.sjs");
+var statusDate = fn.currentDate();
+var statusMessage = "I have the suspect at the confirmed location.  Send extraction team.";
+
+if (xdmp.databaseName(xdmp.database()) == "Documents") {
+
+  ampedFunctions.performUpdate(statusDate, statusMessage);
+
+}
+else {
+  "Please select the Documents database from the Content Source menu and run this script again."
+}</query><query name="Update with Original Document" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">//  Update the document back to its original content.
+
+declareUpdate();
+
+if (xdmp.databaseName(xdmp.database()) == "Documents") {
+  
+  xdmp.documentInsert(
+    "/secret/44444.json",
+    {
+      "title": "alert...intercepted message",
+      "body": "spectre meeting today at 17:00",
+      "latitude": "41.390205",
+      "longitude": "2.154007"
+    },
+    [xdmp.permission("secret-read", "read"), xdmp.permission("project-admin", "update")]
+  );
+
+}
+else {
+  "Please select the Documents database from the Content Source menu and run this script again." 
+}</query><query name="Test 1 without Amp" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">/*
+  Try running the status-update.sjs module from our app server on port 8010.
+  Login to the app server using the M user (m / pass).
+  Since she has the project-admin role, we would expect her to be able to perform an update on the document
+/*</query><query name="Set xdmp:value Execute Privilege" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">//  Update the "project-admin" role with an execute privilege to perform the xdmp.value function 
+
+var config = 
+  { 
+    "role":["project-admin"]
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPut('http://localhost:8002/manage/v2/privileges/xdmp:value/properties?kind=execute', options);</query><query name="Test 2 without Amp" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">/* 
+  Open another browser session and try running status-update.sjs as the Bond user (bond / pass)
+  Note that he still needs the xdmp:value execute privilege because he does not have the project-admin role.
+  Even if the role he has (secret-read) was given the appropriate execute privilege, Bond would still
+  not be able to do the update -- because he does not have an update permission on the document.
+  
+  Instead of permanently granting the secret-read role more power, we will instead setup an amp for this function.
+/*</query><query name="Setup Amp" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">//  Create an amp that gives a user the project-admin role when running the performUpdate funtion
+
+var config = 
+  {
+    "namespace": "",
+    "local-name": "updateStatus",
+    "document-uri": "/amped-functions.sjs",
+    "modules-database": "Modules",
+    "role": ["project-admin"]
+  };
+
+var options = {
+  authentication: {
+    'method': 'digest',
+    'username': 'admin',
+    'password': 'admin'
+  },
+  data: xdmp.quote(config), //xdmp.quote() formats the config object as a string so the REST endpoint understands it
+  headers : {
+    'content-type' : 'application/json'
+  }
+};
+
+xdmp.httpPost('http://localhost:8002/manage/v2/amps', options);
+
+</query><query name="Final Test" focus="false" active="true" content-source="as:7198746565588753447:" mode="javascript">/*
+  Try running status-update.sjs on port 8010 and logging in as the Bond user (bond / pass) again.
+  Because we now have the amp on the function, Bond will be able to execute that function and be given the 
+  project-admin role for the scope of that function call.  This will enable Bond to successfully report his
+  status only when needed in this one part of our application.
+/*</query></workspace></export>
